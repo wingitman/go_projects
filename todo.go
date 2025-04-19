@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -35,6 +34,7 @@ func main() {
 			help:        "Please provide a paramater to search the help documentation\nFor example: `help commands`",
 			description: "Provides detail on a specific command",
 			call: func(params []string) {
+				fmt.Printf("Params Provided: %v\n", params)
 				fn := ""
 				if len(params) > 1 {
 					fn = params[1]
@@ -43,13 +43,13 @@ func main() {
 					fmt.Println(commands[0].help)
 				} else {
 					for _, v := range commands {
-						if v.name == fn {
+						if strings.ToLower(v.name) == strings.ToLower(fn) {
 							fmt.Println(v.help)
 							return
 						}
 					}
 				}
-				fmt.Printf("", params[0])
+				fmt.Printf("%v\n", params[0])
 			},
 		},
 		{
@@ -57,16 +57,17 @@ func main() {
 			help:        "Takes three paramters:\n title: string - The name of your to list item\n desc: A description for the item\n dueDateTime?: Sets the due date (optional)",
 			description: "Adds a new items to the list",
 			call: func(params []string) {
-				fmt.Printf("adding %v to todo list", params[1])
 
 				if len(params) < 3 {
-					log.Fatalln("Not enough parameters provided (2)")
+					fmt.Println("Not enough parameters provided (2)")
 					return
 				}
 				if len(params) > 5 {
-					log.Fatalln("Too many parameters provided (2)")
+					fmt.Println("Too many parameters provided (2)")
 					return
 				}
+
+				fmt.Printf("adding %v to todo list\n", params[1])
 
 				title := params[1]
 				desc := params[2]
@@ -78,8 +79,8 @@ func main() {
 					dueTime, dTErr := time.Parse("HH:mm:ss", params[3])
 
 					if dDErr != nil && dTErr != nil {
-						log.Fatalln(dDErr)
-						log.Fatalln(dTErr)
+						fmt.Println(dDErr)
+						fmt.Println(dTErr)
 						return
 					}
 					dueDateTime = time.Date(dueDate.Year(), dueDate.Month(), dueDate.Day(), dueTime.Hour(), dueTime.Minute(), dueTime.Second(), dueTime.Nanosecond(), dueTime.Location())
@@ -90,8 +91,8 @@ func main() {
 					comTime, dTErr := time.Parse("HH:mm:ss", params[3])
 
 					if dDErr != nil && dTErr != nil {
-						log.Fatalln(dDErr)
-						log.Fatalln(dTErr)
+						fmt.Println(dDErr)
+						fmt.Println(dTErr)
 						return
 					}
 					comDateTime = time.Date(comDate.Year(), comDate.Month(), comDate.Day(), comTime.Hour(), comTime.Minute(), comTime.Second(), comTime.Nanosecond(), comTime.Location())
@@ -106,7 +107,7 @@ func main() {
 				}
 
 				todos = append(todos, todo)
-				fmt.Printf("Added item to todo list (%v)", len(todos))
+				fmt.Printf("Added item to todo list (%v)\n", len(todos))
 			},
 		},
 	}
@@ -116,11 +117,15 @@ func main() {
 
 	split := strings.Split(text, " ")
 	for _, v := range commands {
-		if v.name == strings.TrimSpace(split[0]) {
+		if strings.ToLower(v.name) == strings.ToLower(strings.TrimSpace(split[0])) {
 			v.call(split)
+			main()
 		}
 	}
 
-	fmt.Println(text)
+	fmt.Println("Invalid command, please choose one of the following commands:")
+	for _, v := range commands {
+		fmt.Printf("%v - %v\n", v.name, v.description)
+	}
 	main()
 }
