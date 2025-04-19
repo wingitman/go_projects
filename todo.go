@@ -11,6 +11,7 @@ import (
 
 type Command struct {
 	name        string
+	help        string
 	description string
 	call        func([]string)
 }
@@ -31,13 +32,29 @@ func main() {
 	commands = []Command{
 		{
 			name:        "help",
+			help:        "Please provide a paramater to search the help documentation\nFor example: `help commands`",
 			description: "Provides detail on a specific command",
 			call: func(params []string) {
-				fmt.Printf("this is a help function for %v", params[0])
+				fn := ""
+				if len(params) > 1 {
+					fn = params[1]
+				}
+				if fn == "" {
+					fmt.Println(commands[0].help)
+				} else {
+					for _, v := range commands {
+						if v.name == fn {
+							fmt.Println(v.help)
+							return
+						}
+					}
+				}
+				fmt.Printf("", params[0])
 			},
 		},
 		{
 			name:        "add",
+			help:        "Takes three paramters:\n title: string - The name of your to list item\n desc: A description for the item\n dueDateTime?: Sets the due date (optional)",
 			description: "Adds a new items to the list",
 			call: func(params []string) {
 				fmt.Printf("adding %v to todo list", params[1])
@@ -98,10 +115,8 @@ func main() {
 	text, _ := reader.ReadString('\n')
 
 	split := strings.Split(text, " ")
-	fmt.Printf("SPLIT: %v\n", split)
-	for k, v := range commands {
-		fmt.Printf("%v - input: %v; cmd.Name: %v\n", k, split[0], v.name)
-		if v.name == split[0] {
+	for _, v := range commands {
+		if v.name == strings.TrimSpace(split[0]) {
 			v.call(split)
 		}
 	}
