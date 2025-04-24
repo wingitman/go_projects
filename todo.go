@@ -12,7 +12,7 @@ type Command struct {
 	name        string
 	help        string
 	description string
-	call        func([]string)
+	call        func([]string) int
 }
 
 type ToDo struct {
@@ -27,13 +27,44 @@ var commands []Command
 var todos []ToDo
 
 func main() {
+	setup()
+	loop()
+}
+
+func loop() {
+	reader := bufio.NewReader(os.Stdin)
+	text, _ := reader.ReadString('\n')
+	split := strings.Split(strings.ReplaceAll(strings.ReplaceAll(text, " ", "|"), "\n", ""), "|")
+
+	errorCode := 0
+
+	for i, s := range split {
+		for _, v := range commands {
+			fmt.Printf("%v: |%v| == |%v| ? %v\n", i, s, v.name, s == v.name)
+			if strings.ToLower(v.name) == strings.ToLower(s) {
+				errorCode = v.call(split)
+			}
+		}
+	}
+
+	if errorCode > 0 {
+		fmt.Println("Invalid command, please choose one of the following commands:")
+		for _, v := range commands {
+			fmt.Printf("%v - %v\n", v.name, v.description)
+		}
+		return
+	}
+	loop()
+}
+
+func setup() {
 	todos := []ToDo{}
 	commands = []Command{
 		{
 			name:        "help",
 			help:        "Please provide a paramater to search the help documentation\nFor example: `help commands`",
 			description: "Provides detail on a specific command",
-			call: func(params []string) {
+			call: func(params []string) int {
 				fmt.Printf("Params Provided: %v\n", params)
 				fn := ""
 				if len(params) > 1 {
@@ -45,26 +76,27 @@ func main() {
 					for _, v := range commands {
 						if strings.ToLower(v.name) == strings.ToLower(fn) {
 							fmt.Println(v.help)
-							return
+							return 0
 						}
 					}
 				}
 				fmt.Printf("%v\n", params[0])
+				return 1
 			},
 		},
 		{
 			name:        "add",
 			help:        "Takes three paramters:\n title: string - The name of your to list item\n desc: A description for the item\n dueDateTime?: Sets the due date (optional)",
 			description: "Adds a new items to the list",
-			call: func(params []string) {
+			call: func(params []string) int {
 
 				if len(params) < 3 {
 					fmt.Println("Not enough parameters provided (2)")
-					return
+					return 1
 				}
 				if len(params) > 5 {
 					fmt.Println("Too many parameters provided (2)")
-					return
+					return 2
 				}
 
 				fmt.Printf("adding %v to todo list\n", params[1])
@@ -81,7 +113,7 @@ func main() {
 					if dDErr != nil && dTErr != nil {
 						fmt.Println(dDErr)
 						fmt.Println(dTErr)
-						return
+						return 3
 					}
 					dueDateTime = time.Date(dueDate.Year(), dueDate.Month(), dueDate.Day(), dueTime.Hour(), dueTime.Minute(), dueTime.Second(), dueTime.Nanosecond(), dueTime.Location())
 				}
@@ -93,7 +125,7 @@ func main() {
 					if dDErr != nil && dTErr != nil {
 						fmt.Println(dDErr)
 						fmt.Println(dTErr)
-						return
+						return 4
 					}
 					comDateTime = time.Date(comDate.Year(), comDate.Month(), comDate.Day(), comTime.Hour(), comTime.Minute(), comTime.Second(), comTime.Nanosecond(), comTime.Location())
 				}
@@ -108,24 +140,8 @@ func main() {
 
 				todos = append(todos, todo)
 				fmt.Printf("Added item to todo list (%v)\n", len(todos))
+				return 0
 			},
 		},
 	}
-
-	reader := bufio.NewReader(os.Stdin)
-	text, _ := reader.ReadString('\n')
-
-	split := strings.Split(text, " ")
-	for _, v := range commands {
-		if strings.ToLower(v.name) == strings.ToLower(strings.TrimSpace(split[0])) {
-			v.call(split)
-			main()
-		}
-	}
-
-	fmt.Println("Invalid command, please choose one of the following commands:")
-	for _, v := range commands {
-		fmt.Printf("%v - %v\n", v.name, v.description)
-	}
-	main()
 }
