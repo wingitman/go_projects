@@ -34,14 +34,18 @@ func main() {
 func loop() {
 	reader := bufio.NewReader(os.Stdin)
 	text, _ := reader.ReadString('\n')
-	split := strings.Split(strings.ReplaceAll(strings.ReplaceAll(text, " ", "|"), "\n", ""), "|")
-
+	split := strings.Split(strings.ReplaceAll(strings.ReplaceAll(text, "\n", "|"), " ", "|"), "|")
 	errorCode := 0
 
 	for i, s := range split {
+		fmt.Printf("%v:%v\n",i,s)
+		if i == 0 {
+			continue
+		}
 		for _, v := range commands {
-			fmt.Printf("%v: |%v| == |%v| ? %v\n", i, s, v.name, s == v.name)
+			fmt.Printf("%v, %v\n", s, v.name)
 			if strings.ToLower(v.name) == strings.ToLower(s) {
+				fmt.Printf("%v - invoking %v\n", i, v.name)
 				errorCode = v.call(split)
 			}
 		}
@@ -52,7 +56,7 @@ func loop() {
 		for _, v := range commands {
 			fmt.Printf("%v - %v\n", v.name, v.description)
 		}
-		return
+		fmt.Println()
 	}
 	loop()
 }
@@ -91,11 +95,11 @@ func setup() {
 			call: func(params []string) int {
 
 				if len(params) < 3 {
-					fmt.Println("Not enough parameters provided (2)")
+					fmt.Println("Not enough parameters provided (a, b)")
 					return 1
 				}
 				if len(params) > 5 {
-					fmt.Println("Too many parameters provided (2)")
+					fmt.Println("Too many parameters provided (a, b)")
 					return 2
 				}
 
@@ -145,3 +149,15 @@ func setup() {
 		},
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
