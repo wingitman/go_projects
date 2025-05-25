@@ -32,33 +32,37 @@ func main() {
 }
 
 func loop() {
+	fmt.Println("loop start")
 	reader := bufio.NewReader(os.Stdin)
 	text, _ := reader.ReadString('\n')
-	split := strings.Split(strings.ReplaceAll(strings.ReplaceAll(text, "\n", "|"), " ", "|"), "|")
+	split := strings.Split(text, " ")
 	errorCode := 0
 
-	for i, s := range split {
-		fmt.Printf("%v:%v\n",i,s)
-		if i == 0 {
-			continue
-		}
-		for _, v := range commands {
-			fmt.Printf("%v, %v\n", s, v.name)
-			if strings.ToLower(v.name) == strings.ToLower(s) {
-				fmt.Printf("%v - invoking %v\n", i, v.name)
-				errorCode = v.call(split)
-			}
-		}
+	cmd := getCmd(split[0])
+	if cmd != nil {
+		errorCode = cmd(split)
 	}
 
 	if errorCode > 0 {
-		fmt.Println("Invalid command, please choose one of the following commands:")
-		for _, v := range commands {
-			fmt.Printf("%v - %v\n", v.name, v.description)
-		}
-		fmt.Println()
+		fmt.Printf("Error code: %v", errorCode)
+		return
 	}
+
+	reader.Reset(os.Stdin)
+	reader = nil
 	loop()
+}
+
+func getCmd(input string) func([]string) int {
+	for _, cmd := range commands {
+		if strings.ToLower(cmd.name) == strings.ToLower(input) {
+			return cmd.call
+		}
+	}
+	for _, cmd := range commands {
+		fmt.Printf("\t%v - %v\n", cmd.name, cmd.description)
+	}
+	return nil
 }
 
 func setup() {
@@ -149,15 +153,3 @@ func setup() {
 		},
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
